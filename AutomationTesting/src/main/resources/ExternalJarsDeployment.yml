@@ -1,0 +1,40 @@
+---
+- name: Deploy JAR files from JFrog Artifactory to Unix Servers
+  hosts: unix_servers  # Define your group of Unix servers in your inventory
+  become: yes          # Use sudo if necessary
+  vars:
+    artifactory_url: "https://your-artifactory-instance/artifactory"
+    repository: "your-repo"  # Your JAR repository in Artifactory
+    jar_files:
+      - "example-1.0.0.jar"   # List your JAR files
+      - "example-2.0.0.jar"
+    destination_path: "/opt/myapp/jars"  # Path where JAR files will be deployed
+    username: "your-username"  # Artifactory username
+    password: "your-password"  # Artifactory password
+
+  tasks:
+    - name: Ensure destination directory exists
+      file:
+        path: "{{ destination_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Download JAR files from JFrog Artifactory
+      get_url:
+        url: "{{ artifactory_url }}/{{ repository }}/{{ item }}"
+        dest: "{{ destination_path }}/{{ item }}"
+        url_username: "{{ username }}"
+        url_password: "{{ password }}"
+      loop: "{{ jar_files }}"
+
+    - name: Verify JAR files are downloaded
+      stat:
+        path: "{{ destination_path }}/{{ item }}"
+      loop: "{{ jar_files }}"
+      register: jar_file_status
+
+    - name: Fail if any JAR file was not downloaded
+      fail:
+        msg: "The JAR file {{ item.item }} was not downloaded!"
+      when: item.stat.exists == false
+      loop: "{{ jar_file_status.results }}"
