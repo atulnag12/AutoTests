@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Set root directory and the ARCH directory path
+PIONEER_ROOT="pioneer/nbsedev_user_DEV2/pioneer/latest"
+ARCH_DIR="$PIONEER_ROOT/ARCH"
+
+# Function to create a new timestamp directory
+create_new_arch_timestamp() {
+    # Get the current timestamp (format: YYYYMMDD_HHMMSS)
+    TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+    
+    # Create a new directory under ARCH with the timestamp
+    NEW_DIR="$ARCH_DIR/$TIMESTAMP"
+    
+    # Make the new directory
+    mkdir -p "$NEW_DIR"
+    
+    # Output the new directory for logging
+    echo "Created new directory: $NEW_DIR"
+    
+    # Return the new directory name
+    echo "$NEW_DIR"
+}
+
+# Function to clean up old ARCH_TIMESTAMP directories (retain only latest 3)
+cleanup_old_arch_directories() {
+    # List the directories inside ARCH, sorted by creation time (oldest first)
+    ARCH_DIRS=$(ls -d $ARCH_DIR/* | sort)
+
+    # Count the number of ARCH_TIMESTAMP directories
+    ARCH_DIR_COUNT=$(echo "$ARCH_DIRS" | wc -l)
+    
+    # If there are more than 3 directories, delete the oldest ones
+    if [ "$ARCH_DIR_COUNT" -gt 3 ]; then
+        # Calculate the number of directories to delete
+        TO_DELETE_COUNT=$((ARCH_DIR_COUNT - 3))
+        
+        # Delete the oldest directories
+        echo "$ARCH_DIRS" | head -n $TO_DELETE_COUNT | xargs rm -rf
+        echo "Deleted old directories, keeping only the latest 3."
+    fi
+}
+
+# Function to update the symbolic link to the latest timestamp directory
+update_symlink() {
+    # Get the latest directory created (this will be the most recent timestamp directory)
+    LATEST_DIR=$(ls -d $ARCH_DIR/* | sort -n | tail -n 1)
+    
+    # If the symlink already exists, remove it
+    if [ -L "$ARCH_DIR" ]; then
+        rm "$ARCH_DIR"
+    fi
+    
+    # Create or update the symlink to point to the latest directory
+    ln -s "$LATEST_DIR" "$ARCH_DIR"
+    echo "Updated symlink to point to: $LATEST_DIR"
+}
+
+# Main script logic
+
+# Step 1: Create a new ARCH_TIMESTAMP directory
+NEW_TIMESTAMP_DIR=$(create_new_arch_timestamp)
+
+# Step 2: Clean up old directories to retain only the latest 3
+cleanup_old_arch_directories
+
+# Step 3: Update the symbolic link to point to the latest timestamp directory
+update_symlink
