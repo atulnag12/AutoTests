@@ -1,0 +1,33 @@
+---
+- name: Manage folder with symlink update in PIONEER_ROOT
+  hosts: localhost
+  gather_facts: no
+  vars:
+    PIONEER_ROOT: "pioneer/nbsedev_user_DEV2/pioneer/latest"
+    folder_name: "my_folder"  # Define your folder name here
+
+  tasks:
+    - name: Ensure the source folder (folder_name) exists
+      file:
+        path: "{{ PIONEER_ROOT }}/{{ folder_name }}"
+        state: directory
+
+    - name: Copy contents of folder_name to folder_name_LATEST
+      copy:
+        src: "{{ PIONEER_ROOT }}/{{ folder_name }}/"
+        dest: "{{ PIONEER_ROOT }}/{{ folder_name }}_LATEST"
+        remote_src: yes
+      notify:
+        - Update symlink to point folder_name to folder_name_LATEST
+
+    - name: Log folder copy completion
+      debug:
+        msg: "Copied contents of {{ folder_name }} to {{ folder_name }}_LATEST"
+
+  handlers:
+    - name: Update symlink to point folder_name to folder_name_LATEST
+      file:
+        src: "{{ PIONEER_ROOT }}/{{ folder_name }}_LATEST"
+        dest: "{{ PIONEER_ROOT }}/{{ folder_name }}"
+        state: link
+        force: yes
