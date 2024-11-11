@@ -1,0 +1,48 @@
+---
+- name: Ensure ARCH points to ARCH_LATEST with content backup
+  hosts: localhost
+  gather_facts: no
+  vars:
+    PIONEER_ROOT: "pioneer/nbsedev_user_DEV2/pioneer/latest"
+    folder_name: "ARCH"
+
+  tasks:
+    - name: Check if ARCH exists and has content
+      stat:
+        path: "{{ PIONEER_ROOT }}/{{ folder_name }}"
+      register: arch_stat
+
+    - name: Ensure ARCH_LATEST directory exists
+      file:
+        path: "{{ PIONEER_ROOT }}/{{ folder_name }}_LATEST"
+        state: directory
+        mode: '0755'
+
+    - name: Copy contents of ARCH to ARCH_LATEST if ARCH is not empty
+      copy:
+        src: "{{ PIONEER_ROOT }}/{{ folder_name }}/"
+        dest: "{{ PIONEER_ROOT }}/{{ folder_name }}_LATEST/"
+        mode: preserve
+      when: arch_stat.exists and arch_stat.is_directory
+
+    - name: Remove ARCH if it exists and is not a symlink
+      file:
+        path: "{{ PIONEER_ROOT }}/{{ folder_name }}"
+        state: absent
+      when: arch_stat.exists and not arch_stat.islnk
+
+    - name: Create symbolic link for ARCH to point to ARCH_LATEST
+      file:
+        src: "{{ PIONEER_ROOT }}/{{ folder_name }}_LATEST"
+        dest: "{{ PIONEER_ROOT }}/{{ folder_name }}"
+        state: link
+        force: yes
+
+    - name: Verify that ARCH points to ARCH_LATEST
+      command: "ls -l {{ PIONEER_ROOT }}/{{ folder_name }}"
+      register: link_verification
+      changed_when: false
+
+    - name: Show link verification output
+      debug:
+        msg: "{{ link_verification.stdout }}"
