@@ -1,0 +1,28 @@
+---
+- name: Pre-deploy Script
+  hosts: localhost
+  vars:
+    pioneer_path: "pioneer/pre_stage"
+    jar_list: []
+
+  tasks:
+    - name: Validate jar_list variable
+      fail:
+        msg: "The jar_list variable is empty or not defined. Please define it."
+      when: jar_list is not defined or jar_list | length == 0
+
+    - name: Delete existing ext_jars folder if it exists
+      file:
+        path: "{{ pioneer_path }}/ext_jars"
+        state: absent
+
+    - name: Create ext_jars folder
+      file:
+        path: "{{ pioneer_path }}/ext_jars"
+        state: directory
+
+    - name: Download JARs dynamically
+      get_url:
+        url: "https://jfrog.com/artifactory/{{ item.name_of_module }}/{{ item.version_number }}/{{ item.name_of_the_jar }}"
+        dest: "{{ pioneer_path }}/ext_jars/{{ item.name_of_the_jar }}"
+      with_items: "{{ jar_list }}"
