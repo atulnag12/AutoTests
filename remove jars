@@ -1,0 +1,14 @@
+- name: Remove old JAR files from release if lib exists
+  shell: |
+    for jar in {{ pre_stage_dir }}/*/{{ folder_name }}/lib/*.jar; do
+      jar_name=$(basename $jar)  # Extract the full filename (e.g., library-1.0.0.jar)
+      jar_base_name=$(echo $jar_name | sed 's/-[0-9].*\.jar$/.jar/')  # Get the base name (library.jar)
+      
+      # Check if any version of the same library exists in the release directory
+      if ls "{{ release_directory }}/{{ folder_name }}/lib/$jar_base_name" >/dev/null 2>&1; then
+        rm -f "{{ release_directory }}/{{ folder_name }}/lib/$jar_base_name"
+      fi
+    done
+  when: lib_dir_status.stat.exists
+  register: remove_jars
+  failed_when: false
