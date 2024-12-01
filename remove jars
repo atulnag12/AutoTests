@@ -63,4 +63,14 @@
   failed_when: false
 
 
+    - name: Print pre_stage_dir in shell
+      shell: |
+        echo "Pre-stage directory: {{ pre_stage_dir }}"
+      when: pre_stage_dir is defined and pre_stage_dir != ""
+      register: result
+      failed_when: false
+
+    - name: Print result of pre_stage_dir shell command
+      debug:
+        msg: "Result of pre_stage_dir shell command: {{ result.stdout }}"
 
