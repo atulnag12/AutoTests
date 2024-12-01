@@ -27,3 +27,19 @@
       - "release_directory: {{ release_directory }}"
       - "pre_stage_dir: {{ pre_stage_dir }}"
       - "container_groups: {{ container_groups }}"
+
+
+
+- name: Remove matching JAR files from release_directory/lib
+  shell: |
+    # Iterate over all JAR files in pre_stage_dir and its subdirectories
+    find {{ pre_stage_dir }} -type f -name "*.jar" | while read -r jar; do
+      # Extract the base name of the JAR file
+      jar_name=$(basename "$jar")
+      
+      # Check if the JAR file exists in release_directory/lib
+      if ls "{{ release_directory }}/lib/$jar_name" >/dev/null 2>&1; then
+        echo "Removing JAR: {{ release_directory }}/lib/$jar_name"
+        rm -f "{{ release_directory }}/lib/$jar_name"
+      fi
+    done
