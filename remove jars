@@ -32,21 +32,35 @@
 
 - name: Remove JAR files from release_directory/lib based on pre_stage_dir
   shell: |
-    # Recursively find all JAR files in pre_stage_dir
-    find "{{ pre_stage_dir }}" -type f -name "*.jar" | while read -r pre_stage_jar; do
-      # Extract the base name without the version (e.g., library.jar from library-1.0.0.jar)
+    # Debugging: Print directories
+    echo "Pre-stage directory: {{ pre_stage_dir }}"
+    echo "Release directory: {{ release_directory }}/lib"
+
+    # Recursively find all JAR files up to 4 nested levels in pre_stage_dir
+    find "{{ pre_stage_dir }}" -mindepth 1 -maxdepth 5 -type f -name "*.jar" | while read -r pre_stage_jar; do
+      # Extract the base name without the version
       jar_name=$(basename "$pre_stage_jar")
       jar_base_name=$(echo "$jar_name" | sed -E 's/-[0-9.]+\.jar$/.jar/')
 
-      # Search for matching files in release_directory/lib with the same base name
-      release_jar_path="{{ release_directory }}/lib/${jar_base_name}"
-      if [ -e "$release_jar_path" ]; then
-        echo "Removing JAR: $release_jar_path (matched base name: $jar_base_name)"
-        rm -f "$release_jar_path"
+      # Debugging: Print the extracted base name
+      echo "Processing JAR: $pre_stage_jar (Base name: $jar_base_name)"
+
+      # Find matching files in release_directory/lib
+      matching_files=$(find "{{ release_directory }}/lib" -type f -name "$jar_base_name*")
+
+      # If matching files are found, delete them
+      if [ -n "$matching_files" ]; then
+        echo "Found matching files in release_directory/lib:"
+        echo "$matching_files"
+        echo "Removing..."
+        echo "$matching_files" | xargs rm -f
+      else
+        echo "No matching files found for $jar_base_name in release_directory/lib."
       fi
     done
   when: lib_dir_status.stat.exists
   register: remove_jars
   failed_when: false
+
 
 
