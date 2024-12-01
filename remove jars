@@ -43,3 +43,6 @@
         rm -f "{{ release_directory }}/lib/$jar_name"
       fi
     done
+  when: lib_dir_status.stat.exists
+  register: remove_jars
+  failed_when: false
