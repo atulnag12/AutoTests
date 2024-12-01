@@ -1,4 +1,4 @@
 matching_files=$(find "{{ release_directory }}/lib" -type f -name "$jar_base_name*.jar")
-jar_base_name=$(echo "$jar_name" | sed -e 's/-[0-9]\+\([.-][0-9]\+\)*\.jar$/.jar/')
+jar_base_name=$(echo "$jar_name" | sed -e 's/-[0-9]\+\([.-][0-9]\+\)*\(-SNAPSHOT\)*\.jar$/.jar/')
 echo "Executing find command: find {{ release_directory }}/lib -type f -name \"$jar_base_name*.jar\""
 
