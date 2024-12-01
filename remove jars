@@ -12,3 +12,18 @@
   when: lib_dir_status.stat.exists
   register: remove_jars
   failed_when: false
+
+
+
+
+
+
+
+
+
+- name: Print release_directory, pre_stage_dir, and container_groups
+  debug:
+    msg:
+      - "release_directory: {{ release_directory }}"
+      - "pre_stage_dir: {{ pre_stage_dir }}"
+      - "container_groups: {{ container_groups }}"
